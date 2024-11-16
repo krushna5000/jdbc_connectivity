@@ -10,8 +10,7 @@ public class Main {
     private static final String DB_USER = "root";
     private static final String DB_PASSWORD = "system";
 
-
-    // Player class: Represents a player with name, age, role, batting average, and jersey number
+    // Player class
     static class Player {
         private int id;
         private String name;
@@ -59,7 +58,7 @@ public class Main {
         }
     }
 
-    // CricketTeam class: Manages the list of players and performs operations like add, display, and search
+    // CricketTeam class
     static class CricketTeam {
         private ArrayList<Player> players;
 
@@ -67,7 +66,7 @@ public class Main {
             players = new ArrayList<>();
         }
 
-        // Insert a new player into the database
+        // Add player to database
         public void addPlayerToDatabase(Player player) {
             try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
                 String query = "INSERT INTO Players (name, age, role, batting_average, jersey_number) VALUES (?, ?, ?, ?, ?)";
@@ -84,12 +83,12 @@ public class Main {
             }
         }
 
-        // Display all players from the database
-        public void displayPlayers(JTextArea displayArea) {
+        // Display players
+        public void displayPlayers(JTable table) {
             try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
                 String query = "SELECT * FROM Players";
                 try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
-                    displayArea.append("List of Players:\n");
+                    ArrayList<Object[]> data = new ArrayList<>();
                     while (rs.next()) {
                         int id = rs.getInt("player_id");
                         String name = rs.getString("name");
@@ -97,32 +96,47 @@ public class Main {
                         String role = rs.getString("role");
                         double battingAvg = rs.getDouble("batting_average");
                         int jerseyNumber = rs.getInt("jersey_number");
-                        displayArea.append("ID: " + id + ", Name: " + name + ", Age: " + age + ", Role: " + role + ", Batting Average: " + battingAvg + ", Jersey Number: " + jerseyNumber + "\n");
+                        data.add(new Object[] {id, name, age, role, battingAvg, jerseyNumber});
                     }
+
+                    Object[][] tableData = new Object[data.size()][6];
+                    for (int i = 0; i < data.size(); i++) {
+                        tableData[i] = data.get(i);
+                    }
+
+                    String[] columnNames = {"ID", "Name", "Age", "Role", "Batting Average", "Jersey Number"};
+                    table.setModel(new javax.swing.table.DefaultTableModel(tableData, columnNames));
                 }
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         }
 
-        // Search for a player by name in the database
-        public void findPlayerByName(String name, JTextArea displayArea) {
+        // Search player by name
+        public void findPlayerByName(String name, JTable table) {
             try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
                 String query = "SELECT * FROM Players WHERE name LIKE ?";
                 try (PreparedStatement stmt = conn.prepareStatement(query)) {
                     stmt.setString(1, "%" + name + "%");
                     try (ResultSet rs = stmt.executeQuery()) {
-                        if (rs.next()) {
+                        ArrayList<Object[]> data = new ArrayList<>();
+                        while (rs.next()) {
                             int id = rs.getInt("player_id");
                             String playerName = rs.getString("name");
                             int age = rs.getInt("age");
                             String role = rs.getString("role");
                             double battingAvg = rs.getDouble("batting_average");
                             int jerseyNumber = rs.getInt("jersey_number");
-                            displayArea.append("Player found: " + "ID: " + id + ", Name: " + playerName + ", Age: " + age + ", Role: " + role + ", Batting Average: " + battingAvg + ", Jersey Number: " + jerseyNumber + "\n");
-                        } else {
-                            displayArea.append("Player not found.\n");
+                            data.add(new Object[] {id, playerName, age, role, battingAvg, jerseyNumber});
                         }
+
+                        Object[][] tableData = new Object[data.size()][6];
+                        for (int i = 0; i < data.size(); i++) {
+                            tableData[i] = data.get(i);
+                        }
+
+                        String[] columnNames = {"ID", "Name", "Age", "Role", "Batting Average", "Jersey Number"};
+                        table.setModel(new javax.swing.table.DefaultTableModel(tableData, columnNames));
                     }
                 }
             } catch (SQLException e) {
@@ -130,22 +144,49 @@ public class Main {
             }
         }
 
-        // Advanced Query: Display players with a specific role
-        public void displayPlayersByRole(String role, JTextArea displayArea) {
+        // Delete player from database
+        public void deletePlayerFromDatabase(int playerId) {
+            try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
+                String query = "DELETE FROM Players WHERE player_id = ?";
+                try (PreparedStatement stmt = conn.prepareStatement(query)) {
+                    stmt.setInt(1, playerId);
+                    int rowsAffected = stmt.executeUpdate();
+                    if (rowsAffected > 0) {
+                        JOptionPane.showMessageDialog(null, "Player deleted successfully.");
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Player not found.");
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(null, "Error deleting player.");
+            }
+        }
+
+        // Display players by role
+        public void displayPlayersByRole(String role, JTable table) {
             try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
                 String query = "SELECT * FROM Players WHERE role = ?";
                 try (PreparedStatement stmt = conn.prepareStatement(query)) {
                     stmt.setString(1, role);
                     try (ResultSet rs = stmt.executeQuery()) {
-                        displayArea.append("Players with Role " + role + ":\n");
+                        ArrayList<Object[]> data = new ArrayList<>();
                         while (rs.next()) {
                             int id = rs.getInt("player_id");
                             String playerName = rs.getString("name");
                             int age = rs.getInt("age");
                             double battingAvg = rs.getDouble("batting_average");
                             int jerseyNumber = rs.getInt("jersey_number");
-                            displayArea.append("ID: " + id + ", Name: " + playerName + ", Age: " + age + ", Batting Average: " + battingAvg + ", Jersey Number: " + jerseyNumber + "\n");
+                            data.add(new Object[] {id, playerName, age, role, battingAvg, jerseyNumber});
                         }
+
+                        Object[][] tableData = new Object[data.size()][6];
+                        for (int i = 0; i < data.size(); i++) {
+                            tableData[i] = data.get(i);
+                        }
+
+                        String[] columnNames = {"ID", "Name", "Age", "Role", "Batting Average", "Jersey Number"};
+                        table.setModel(new javax.swing.table.DefaultTableModel(tableData, columnNames));
                     }
                 }
             } catch (SQLException e) {
@@ -153,22 +194,30 @@ public class Main {
             }
         }
 
-        // Advanced Query: Display players above a certain batting average
-        public void displayPlayersAboveBattingAvg(double avg, JTextArea displayArea) {
+        // Display players with batting average above a certain value
+        public void displayPlayersAboveBattingAvg(double avg, JTable table) {
             try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD)) {
                 String query = "SELECT * FROM Players WHERE batting_average > ?";
                 try (PreparedStatement stmt = conn.prepareStatement(query)) {
                     stmt.setDouble(1, avg);
                     try (ResultSet rs = stmt.executeQuery()) {
-                        displayArea.append("Players with Batting Average above " + avg + ":\n");
+                        ArrayList<Object[]> data = new ArrayList<>();
                         while (rs.next()) {
                             int id = rs.getInt("player_id");
                             String playerName = rs.getString("name");
                             int age = rs.getInt("age");
                             double battingAvg = rs.getDouble("batting_average");
                             int jerseyNumber = rs.getInt("jersey_number");
-                            displayArea.append("ID: " + id + ", Name: " + playerName + ", Age: " + age + ", Batting Average: " + battingAvg + ", Jersey Number: " + jerseyNumber + "\n");
+                            data.add(new Object[] {id, playerName, age, battingAvg, jerseyNumber});
                         }
+
+                        Object[][] tableData = new Object[data.size()][5];
+                        for (int i = 0; i < data.size(); i++) {
+                            tableData[i] = data.get(i);
+                        }
+
+                        String[] columnNames = {"ID", "Name", "Age", "Batting Average", "Jersey Number"};
+                        table.setModel(new javax.swing.table.DefaultTableModel(tableData, columnNames));
                     }
                 }
             } catch (SQLException e) {
@@ -177,34 +226,29 @@ public class Main {
         }
     }
 
-    // Main GUI class to handle user interaction and UI
+    // Main GUI class
     public static void main(String[] args) {
-        // Create main frame
         JFrame frame = new JFrame("Cricket Management System");
-        frame.setSize(600, 400);
+        frame.setSize(800, 600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 
-        // Create an instance of CricketTeam to manage players
         CricketTeam team = new CricketTeam();
 
-        // Create panels for layout
         JPanel inputPanel = new JPanel();
         JPanel buttonPanel = new JPanel();
         JPanel displayPanel = new JPanel();
 
-        // Create text fields for input
         JTextField nameField = new JTextField(15);
         JTextField ageField = new JTextField(5);
         JTextField roleField = new JTextField(10);
         JTextField avgField = new JTextField(5);
         JTextField jerseyField = new JTextField(5);
-        JTextArea displayArea = new JTextArea(10, 30);
-        displayArea.setEditable(false);
 
-        JScrollPane scrollPane = new JScrollPane(displayArea);
+        String[] columnNames = {"ID", "Name", "Age", "Role", "Batting Average", "Jersey Number"};
+        JTable playerTable = new JTable(new Object[0][columnNames.length], columnNames);
+        JScrollPane tableScrollPane = new JScrollPane(playerTable);
 
-        // Set up input panel with labels and text fields
         inputPanel.setLayout(new GridLayout(5, 2));
         inputPanel.add(new JLabel("Player Name:"));
         inputPanel.add(nameField);
@@ -217,12 +261,12 @@ public class Main {
         inputPanel.add(new JLabel("Jersey Number:"));
         inputPanel.add(jerseyField);
 
-        // Set up button panel with buttons for different actions
         JButton addButton = new JButton("Add Player");
         JButton displayButton = new JButton("Display Players");
         JButton searchButton = new JButton("Search Player");
         JButton roleButton = new JButton("Display By Role");
         JButton avgButton = new JButton("Display By Avg");
+        JButton deleteButton = new JButton("Delete Player");
 
         buttonPanel.setLayout(new FlowLayout());
         buttonPanel.add(addButton);
@@ -230,13 +274,13 @@ public class Main {
         buttonPanel.add(searchButton);
         buttonPanel.add(roleButton);
         buttonPanel.add(avgButton);
+        buttonPanel.add(deleteButton);
 
-        // Add panels to the frame
         frame.add(inputPanel, BorderLayout.NORTH);
         frame.add(buttonPanel, BorderLayout.CENTER);
-        frame.add(scrollPane, BorderLayout.SOUTH);
+        frame.add(tableScrollPane, BorderLayout.SOUTH);
 
-        // Action listener for "Add Player" button
+        // Add action listeners for buttons
         addButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -244,71 +288,79 @@ public class Main {
                     String name = nameField.getText();
                     int age = Integer.parseInt(ageField.getText());
                     String role = roleField.getText();
-                    double battingAvg = Double.parseDouble(avgField.getText());
-                    int jerseyNumber = Integer.parseInt(jerseyField.getText());
+                    double avg = Double.parseDouble(avgField.getText());
+                    int jersey = Integer.parseInt(jerseyField.getText());
 
-                    // Create new player and add to team and database
-                    Player player = new Player(0, name, age, role, battingAvg, jerseyNumber);
-                    team.addPlayerToDatabase(player);
-                    displayArea.append("Player added: " + player + "\n");
-
-                    // Clear input fields
-                    nameField.setText("");
-                    ageField.setText("");
-                    roleField.setText("");
-                    avgField.setText("");
-                    jerseyField.setText("");
+                    Player newPlayer = new Player(0, name, age, role, avg, jersey);
+                    team.addPlayerToDatabase(newPlayer);
+                    JOptionPane.showMessageDialog(frame, "Player added successfully.");
+                    team.displayPlayers(playerTable); // Update table after adding player
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(frame, "Please enter valid numeric values for Age, Batting Average, and Jersey Number.");
+                    JOptionPane.showMessageDialog(frame, "Please enter valid numbers for age, batting average, and jersey number.");
                 }
             }
         });
 
-        // Action listener for "Display Players" button
+        // Display all players
         displayButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                displayArea.setText(""); // Clear display area
-                team.displayPlayers(displayArea);
+                team.displayPlayers(playerTable);
             }
         });
 
-        // Action listener for "Search Player" button
+        // Search player by name
         searchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String searchName = JOptionPane.showInputDialog(frame, "Enter player name to search:");
-                if (searchName != null && !searchName.trim().isEmpty()) {
-                    team.findPlayerByName(searchName, displayArea);
+                String name = JOptionPane.showInputDialog(frame, "Enter player name to search:");
+                if (name != null && !name.trim().isEmpty()) {
+                    team.findPlayerByName(name, playerTable);
                 }
             }
         });
 
-        // Action listener for "Display By Role" button
+        // Display players by role
         roleButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String role = JOptionPane.showInputDialog(frame, "Enter player role to search:");
+                String role = JOptionPane.showInputDialog(frame, "Enter player role to filter by (e.g., Batsman, Bowler):");
                 if (role != null && !role.trim().isEmpty()) {
-                    team.displayPlayersByRole(role, displayArea);
+                    team.displayPlayersByRole(role, playerTable);
                 }
             }
         });
 
-        // Action listener for "Display By Avg" button
+        // Display players with batting average above a certain value
         avgButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
                     double avg = Double.parseDouble(JOptionPane.showInputDialog(frame, "Enter minimum batting average:"));
-                    team.displayPlayersAboveBattingAvg(avg, displayArea);
+                    team.displayPlayersAboveBattingAvg(avg, playerTable);
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(frame, "Please enter a valid number for batting average.");
+                    JOptionPane.showMessageDialog(frame, "Please enter a valid number for the batting average.");
                 }
             }
         });
 
-        // Set frame visible
+        // Delete player
+        deleteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String input = JOptionPane.showInputDialog(frame, "Enter Player ID to delete:");
+                    if (input != null && !input.trim().isEmpty()) {
+                        int playerId = Integer.parseInt(input);
+                        team.deletePlayerFromDatabase(playerId);
+                        team.displayPlayers(playerTable); // Refresh the table after deletion
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(frame, "Please enter a valid numeric ID.");
+                }
+            }
+        });
+
         frame.setVisible(true);
     }
 }
