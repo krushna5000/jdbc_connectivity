@@ -241,7 +241,7 @@ public class Main {
 
         JTextField nameField = new JTextField(15);
         JTextField ageField = new JTextField(5);
-        JTextField roleField = new JTextField(10);
+        JComboBox<String> roleComboBox = new JComboBox<>(new String[] {"Batsman", "Bowler"}); // Dropdown for Role
         JTextField avgField = new JTextField(5);
         JTextField jerseyField = new JTextField(5);
 
@@ -255,7 +255,7 @@ public class Main {
         inputPanel.add(new JLabel("Age:"));
         inputPanel.add(ageField);
         inputPanel.add(new JLabel("Role:"));
-        inputPanel.add(roleField);
+        inputPanel.add(roleComboBox);  // Use ComboBox for Role selection
         inputPanel.add(new JLabel("Batting Average:"));
         inputPanel.add(avgField);
         inputPanel.add(new JLabel("Jersey Number:"));
@@ -287,7 +287,7 @@ public class Main {
                 try {
                     String name = nameField.getText();
                     int age = Integer.parseInt(ageField.getText());
-                    String role = roleField.getText();
+                    String role = (String) roleComboBox.getSelectedItem(); // Get selected role
                     double avg = Double.parseDouble(avgField.getText());
                     int jersey = Integer.parseInt(jerseyField.getText());
 
